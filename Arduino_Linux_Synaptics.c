@@ -1483,37 +1483,7 @@ static bool impaired_toshiba_kbc;
 
 static const struct dmi_system_id toshiba_dmi_table[] __initconst = {
 #if defined(CONFIG_DMI) && defined(CONFIG_X86)
-	{
-		/* Toshiba Satellite */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "Satellite"),
-		},
-	},
-	{
-		/* Toshiba Dynabook */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "dynabook"),
-		},
-	},
-	{
-		/* Toshiba Portege M300 */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M300"),
-		},
-
-	},
-	{
-		/* Toshiba Portege M300 */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "Portable PC"),
-			DMI_MATCH(DMI_PRODUCT_VERSION, "Version 1.0"),
-		},
-
-	},
+// ...
 #endif
 	{ }
 };
@@ -1522,26 +1492,14 @@ static bool broken_olpc_ec;
 
 static const struct dmi_system_id olpc_dmi_table[] __initconst = {
 #if defined(CONFIG_DMI) && defined(CONFIG_OLPC)
-	{
-		/* OLPC XO-1 or XO-1.5 */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "OLPC"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "XO"),
-		},
-	},
+// ...
 #endif
 	{ }
 };
 
 static const struct dmi_system_id __initconst cr48_dmi_table[] = {
 #if defined(CONFIG_DMI) && defined(CONFIG_X86)
-	{
-		/* Cr-48 Chromebook (Codename Mario) */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "IEC"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "Mario"),
-		},
-	},
+// ...
 #endif
 	{ }
 };
@@ -1728,112 +1686,7 @@ synaptics_setup_ps2(struct psmouse *psmouse,
 
 #ifdef CONFIG_MOUSE_PS2_SYNAPTICS_SMBUS
 
-/*
- * The newest Synaptics device can use a secondary bus (called InterTouch) which
- * provides a better bandwidth and allow a better control of the touchpads.
- * This is used to decide if we need to use this bus or not.
- */
-enum {
-	SYNAPTICS_INTERTOUCH_NOT_SET = -1,
-	SYNAPTICS_INTERTOUCH_OFF,
-	SYNAPTICS_INTERTOUCH_ON,
-};
-
-static int synaptics_intertouch = IS_ENABLED(CONFIG_RMI4_SMB) ?
-		SYNAPTICS_INTERTOUCH_NOT_SET : SYNAPTICS_INTERTOUCH_OFF;
-module_param_named(synaptics_intertouch, synaptics_intertouch, int, 0644);
-MODULE_PARM_DESC(synaptics_intertouch, "Use a secondary bus for the Synaptics device.");
-
-static int synaptics_create_intertouch(struct psmouse *psmouse,
-				       struct synaptics_device_info *info,
-				       bool leave_breadcrumbs)
-{
-	bool topbuttonpad =
-		psmouse_matches_pnp_id(psmouse, topbuttonpad_pnp_ids) &&
-		!SYN_CAP_EXT_BUTTONS_STICK(info->ext_cap_10);
-	const struct rmi_device_platform_data pdata = {
-		.sensor_pdata = {
-			.sensor_type = rmi_sensor_touchpad,
-			.axis_align.flip_y = true,
-			.kernel_tracking = false,
-			.topbuttonpad = topbuttonpad,
-		},
-		.gpio_data = {
-			.buttonpad = SYN_CAP_CLICKPAD(info->ext_cap_0c),
-			.trackstick_buttons =
-				!!SYN_CAP_EXT_BUTTONS_STICK(info->ext_cap_10),
-		},
-	};
-	const struct i2c_board_info intertouch_board = {
-		I2C_BOARD_INFO("rmi4_smbus", 0x2c),
-		.flags = I2C_CLIENT_HOST_NOTIFY,
-	};
-
-	return psmouse_smbus_init(psmouse, &intertouch_board,
-				  &pdata, sizeof(pdata), true,
-				  leave_breadcrumbs);
-}
-
-/*
- * synaptics_setup_intertouch - called once the PS/2 devices are enumerated
- * and decides to instantiate a SMBus InterTouch device.
- */
-static int synaptics_setup_intertouch(struct psmouse *psmouse,
-				      struct synaptics_device_info *info,
-				      bool leave_breadcrumbs)
-{
-	int error;
-
-	if (synaptics_intertouch == SYNAPTICS_INTERTOUCH_OFF)
-		return -ENXIO;
-
-	if (synaptics_intertouch == SYNAPTICS_INTERTOUCH_NOT_SET) {
-		if (!psmouse_matches_pnp_id(psmouse, topbuttonpad_pnp_ids) &&
-		    !psmouse_matches_pnp_id(psmouse, smbus_pnp_ids)) {
-
-			if (!psmouse_matches_pnp_id(psmouse, forcepad_pnp_ids))
-				psmouse_info(psmouse,
-					     "Your touchpad (%s) says it can support a different bus. "
-					     "If i2c-hid and hid-rmi are not used, you might want to try setting psmouse.synaptics_intertouch to 1 and report this to linux-input@vger.kernel.org.\n",
-					     psmouse->ps2dev.serio->firmware_id);
-
-			return -ENXIO;
-		}
-	}
-
-	psmouse_info(psmouse, "Trying to set up SMBus access\n");
-
-	error = synaptics_create_intertouch(psmouse, info, leave_breadcrumbs);
-	if (error) {
-		if (error == -EAGAIN)
-			psmouse_info(psmouse, "SMbus companion is not ready yet\n");
-		else
-			psmouse_err(psmouse, "unable to create intertouch device\n");
-
-		return error;
-	}
-
-	return 0;
-}
-
-int synaptics_init_smbus(struct psmouse *psmouse)
-{
-	struct synaptics_device_info info;
-	int error;
-
-	psmouse_reset(psmouse);
-
-	error = synaptics_query_hardware(psmouse, &info);
-	if (error) {
-		psmouse_err(psmouse, "Unable to query device: %d\n", error);
-		return error;
-	}
-
-	if (!SYN_CAP_INTERTOUCH(info.ext_cap_0c))
-		return -ENXIO;
-
-	return synaptics_create_intertouch(psmouse, &info, false);
-}
+// ...
 
 #else /* CONFIG_MOUSE_PS2_SYNAPTICS_SMBUS */
 
