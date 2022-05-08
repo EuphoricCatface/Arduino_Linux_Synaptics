@@ -332,7 +332,7 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 	struct input_mt_pos pos[2];
 	int slot[2], nsemi, i;
 
-	nsemi = clamp_val(num_fingers, 0, 2);
+	nsemi = constrain(num_fingers, 0, 2);
 
 	for (i = 0; i < nsemi; i++) {
 		pos[i].x = hw[i]->x;
