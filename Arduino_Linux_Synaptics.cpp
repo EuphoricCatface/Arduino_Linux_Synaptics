@@ -3,6 +3,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef int8_t s8;
 
+#include "Arduino.h"
 #include "Arduino_Linux_Synaptics.h"
 
 /**** Device configurations ****/
@@ -182,7 +183,7 @@ static int synaptics_parse_hw_state(const u8 buf[],
 				//} else if (time_after(jiffies,
 				//		priv->press_start +
 				//			msecs_to_jiffies(50))) {
-				} else if (micros() > priv->press_start + 50)
+				} else if (micros() > priv->press_start + 50) {
 					priv->report_press = true;
 				}
 			} else {
