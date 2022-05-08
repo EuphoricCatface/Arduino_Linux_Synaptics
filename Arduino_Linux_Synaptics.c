@@ -388,59 +388,12 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	input_sync(dev);
 }
 
-static bool synaptics_validate_byte(struct psmouse *psmouse,
-				    int idx, enum synaptics_pkt_type pkt_type)
-{
-	static const u8 newabs_mask[]	  = { 0xC8, 0x00, 0x00, 0xC8, 0x00 };
-	static const u8 newabs_rel_mask[] = { 0xC0, 0x00, 0x00, 0xC0, 0x00 };
-	static const u8 newabs_rslt[]	  = { 0x80, 0x00, 0x00, 0xC0, 0x00 };
-	static const u8 oldabs_mask[]	  = { 0xC0, 0x60, 0x00, 0xC0, 0x60 };
-	static const u8 oldabs_rslt[]	  = { 0xC0, 0x00, 0x00, 0x80, 0x00 };
-	const u8 *packet = psmouse->packet;
-
-	if (idx < 0 || idx > 4)
-		return false;
-
-	switch (pkt_type) {
-
-	case SYN_NEWABS:
-	case SYN_NEWABS_RELAXED:
-		return (packet[idx] & newabs_rel_mask[idx]) == newabs_rslt[idx];
-
-	case SYN_NEWABS_STRICT:
-		return (packet[idx] & newabs_mask[idx]) == newabs_rslt[idx];
-
-	case SYN_OLDABS:
-		return (packet[idx] & oldabs_mask[idx]) == oldabs_rslt[idx];
-
-	default:
-		psmouse_err(psmouse, "unknown packet type %d\n", pkt_type);
-		return false;
-	}
-}
-
-static enum synaptics_pkt_type
-synaptics_detect_pkt_type(struct psmouse *psmouse)
-{
-	int i;
-
-	for (i = 0; i < 5; i++) {
-		if (!synaptics_validate_byte(psmouse, i, SYN_NEWABS_STRICT)) {
-			psmouse_info(psmouse, "using relaxed packet validation\n");
-			return SYN_NEWABS_RELAXED;
-		}
-	}
-
-	return SYN_NEWABS_STRICT;
-}
-
 static psmouse_ret_t synaptics_process_byte(struct psmouse *psmouse)
 {
 	struct synaptics_data *priv = psmouse->private;
 
 	if (psmouse->pktcnt >= 6) { /* Full packet received */
-		if (unlikely(priv->pkt_type == SYN_NEWABS))
-			priv->pkt_type = synaptics_detect_pkt_type(psmouse);
+		synaptics_process_packet(psmouse);
 
 		return PSMOUSE_FULL_PACKET;
 	}
