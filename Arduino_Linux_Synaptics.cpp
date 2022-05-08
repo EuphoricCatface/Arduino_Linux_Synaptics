@@ -176,11 +176,13 @@ static int synaptics_parse_hw_state(const u8 buf[],
 				 * move.
 				 */
 				if  (!priv->press) {
-					priv->press_start = jiffies;
+					//priv->press_start = jiffies;
+					priv->press_start = micros();
 					priv->press = true;
-				} else if (time_after(jiffies,
-						priv->press_start +
-							msecs_to_jiffies(50))) {
+				//} else if (time_after(jiffies,
+				//		priv->press_start +
+				//			msecs_to_jiffies(50))) {
+				} else if (micros() > priv->press_start + 50)
 					priv->report_press = true;
 				}
 			} else {
