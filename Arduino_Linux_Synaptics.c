@@ -214,24 +214,6 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 		}
 		return;
 	}
-
-	/*
-	 * This generation of touchpads has the trackstick buttons
-	 * physically wired to the touchpad. Re-route them through
-	 * the pass-through interface.
-	 */
-	if (priv->pt_port) {
-		u8 pt_buttons;
-
-		/* The trackstick expects at most 3 buttons */
-		pt_buttons = SYN_EXT_BUTTON_STICK_L(hw->ext_buttons)      |
-			     SYN_EXT_BUTTON_STICK_R(hw->ext_buttons) << 1 |
-			     SYN_EXT_BUTTON_STICK_M(hw->ext_buttons) << 2;
-
-		serio_interrupt(priv->pt_port,
-				PSMOUSE_OOB_EXTRA_BTNS, SERIO_OOB_DATA);
-		serio_interrupt(priv->pt_port, pt_buttons, SERIO_OOB_DATA);
-	}
 }
 
 static void synaptics_report_buttons(struct psmouse *psmouse,
@@ -459,14 +441,6 @@ static psmouse_ret_t synaptics_process_byte(struct psmouse *psmouse)
 	if (psmouse->pktcnt >= 6) { /* Full packet received */
 		if (unlikely(priv->pkt_type == SYN_NEWABS))
 			priv->pkt_type = synaptics_detect_pkt_type(psmouse);
-
-		if (SYN_CAP_PASS_THROUGH(priv->info.capabilities) &&
-		    synaptics_is_pt_packet(psmouse->packet)) {
-			if (priv->pt_port)
-				synaptics_pass_pt_packet(priv->pt_port,
-							 psmouse->packet);
-		} else
-			synaptics_process_packet(psmouse);
 
 		return PSMOUSE_FULL_PACKET;
 	}
