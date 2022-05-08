@@ -15,6 +15,11 @@
 
 #define A_HAS_AGM ((A_CAP_ADV_GESTURE) || (A_CAP_IMAGE_SENSOR))
 
+#define A_MODEL_NEWABS true
+#define A_ID_FULL 0x702
+
+#define A_X_RES 0x42
+
 static const bool cr48_profile_sensor = false;
 
 /*****************************************************************************
@@ -67,7 +72,7 @@ static int synaptics_parse_hw_state(const u8 buf[],
 {
 	memset(hw, 0, sizeof(struct synaptics_hw_state));
 
-	if (SYN_MODEL_NEWABS(priv->info.model_id)) {
+	if (A_MODEL_NEWABS) {
 		hw->w = (((buf[0] & 0x30) >> 2) |
 			 ((buf[0] & 0x04) >> 1) |
 			 ((buf[3] & 0x04) >> 2));
@@ -219,8 +224,8 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 		return;
 
 	/* Bug in FW 8.1 & 8.2, buttons are reported only when ExtBit is 1 */
-	if ((SYN_ID_FULL(priv->info.identity) == 0x801 ||
-	     SYN_ID_FULL(priv->info.identity) == 0x802) &&
+	if ((A_ID_FULL == 0x801 ||
+	     A_ID_FULL == 0x802) &&
 	    !((psmouse->packet[0] ^ psmouse->packet[3]) & 0x02))
 		return;
 
@@ -272,7 +277,7 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 		pos[i].y = synaptics_invert_y(hw[i]->y);
 	}
 
-	input_mt_assign_slots(dev, slot, pos, nsemi, DMAX * priv->info.x_res);
+	input_mt_assign_slots(dev, slot, pos, nsemi, DMAX * A_X_RES);
 
 	for (i = 0; i < nsemi; i++) {
 		input_mt_slot(dev, slot[i]);
