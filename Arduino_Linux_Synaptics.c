@@ -1,3 +1,22 @@
+/* Device configurations */
+/* An arduino device doesn't need to make the configuration dynamic.
+ * Look into the capability values and see which your device supports */
+#define A_CAP_IMAGE_SENSOR false
+#define A_CAP_EXTENDED true
+#define A_CAP_MULTIFINGER false
+#define A_CAP_ADV_GESTURE true
+#define A_CAP_IMAGE_SENSOR false
+#define A_CAP_PALMDETECT true
+#define A_CAP_FOUR_BUTTON false
+#define A_CAP_MIDDLE_BUTTON false
+#define A_CAP_MULTI_BUTTON_NO 0
+#define A_CAP_CLICKPAD false
+#define A_CAP_EXT_BUTTONS_STICK false
+
+#define A_HAS_AGM ((A_CAP_ADV_GESTURE) || (A_CAP_IMAGE_SENSOR))
+
+static const bool cr48_profile_sensor = false;
+
 /*****************************************************************************
  *	Functions to interpret the absolute mode packets
  *      - Retrieved from torvalds/Linux commit e4ce4d3a939d97bea045eafa13ad1195695f91ce
@@ -35,7 +54,7 @@ static void synaptics_parse_ext_buttons(const u8 buf[],
 					struct synaptics_hw_state *hw)
 {
 	unsigned int ext_bits =
-		(SYN_CAP_MULTI_BUTTON_NO(priv->info.ext_cap) + 1) >> 1;
+		(A_CAP_MULTI_BUTTON_NO + 1) >> 1;
 	unsigned int ext_mask = GENMASK(ext_bits - 1, 0);
 
 	hw->ext_buttons = buf[4] & ext_mask;
@@ -53,7 +72,7 @@ static int synaptics_parse_hw_state(const u8 buf[],
 			 ((buf[0] & 0x04) >> 1) |
 			 ((buf[3] & 0x04) >> 2));
 
-		if (synaptics_has_agm(priv) && hw->w == 2) {
+		if (A_HAS_AGM && hw->w == 2) {
 			synaptics_parse_agm(buf, priv, hw);
 			return 1;
 		}
@@ -105,7 +124,7 @@ static int synaptics_parse_hw_state(const u8 buf[],
 
 			hw->left = priv->report_press;
 
-		} else if (SYN_CAP_CLICKPAD(priv->info.ext_cap_0c)) {
+		} else if (A_CAP_CLICKPAD) {
 			/*
 			 * Clickpad's button is transmitted as middle button,
 			 * however, since it is primary button, we will report
@@ -113,18 +132,18 @@ static int synaptics_parse_hw_state(const u8 buf[],
 			 */
 			hw->left = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
 
-		} else if (SYN_CAP_MIDDLE_BUTTON(priv->info.capabilities)) {
+		} else if (A_CAP_MIDDLE_BUTTON) {
 			hw->middle = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
 			if (hw->w == 2)
 				hw->scroll = (s8)buf[1];
 		}
 
-		if (SYN_CAP_FOUR_BUTTON(priv->info.capabilities)) {
+		if (A_CAP_FOUR_BUTTON) {
 			hw->up   = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
 			hw->down = ((buf[0] ^ buf[3]) & 0x02) ? 1 : 0;
 		}
 
-		if (SYN_CAP_MULTI_BUTTON_NO(priv->info.ext_cap) > 0 &&
+		if (A_CAP_MULTI_BUTTON_NO > 0 &&
 		    ((buf[0] ^ buf[3]) & 0x02)) {
 			synaptics_parse_ext_buttons(buf, priv, hw);
 		}
@@ -193,10 +212,10 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 {
 	struct input_dev *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->private;
-	int ext_bits = (SYN_CAP_MULTI_BUTTON_NO(priv->info.ext_cap) + 1) >> 1;
+	int ext_bits = (A_CAP_MULTI_BUTTON_NO + 1) >> 1;
 	int i;
 
-	if (!SYN_CAP_MULTI_BUTTON_NO(priv->info.ext_cap))
+	if (!A_CAP_MULTI_BUTTON_NO)
 		return;
 
 	/* Bug in FW 8.1 & 8.2, buttons are reported only when ExtBit is 1 */
@@ -205,7 +224,7 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 	    !((psmouse->packet[0] ^ psmouse->packet[3]) & 0x02))
 		return;
 
-	if (!SYN_CAP_EXT_BUTTONS_STICK(priv->info.ext_cap_10)) {
+	if (!A_CAP_EXT_BUTTONS_STICK) {
 		for (i = 0; i < ext_bits; i++) {
 			input_report_key(dev, BTN_0 + 2 * i,
 				hw->ext_buttons & BIT(i));
@@ -225,10 +244,10 @@ static void synaptics_report_buttons(struct psmouse *psmouse,
 	input_report_key(dev, BTN_LEFT, hw->left);
 	input_report_key(dev, BTN_RIGHT, hw->right);
 
-	if (SYN_CAP_MIDDLE_BUTTON(priv->info.capabilities))
+	if (A_CAP_MIDDLE_BUTTON)
 		input_report_key(dev, BTN_MIDDLE, hw->middle);
 
-	if (SYN_CAP_FOUR_BUTTON(priv->info.capabilities)) {
+	if (A_CAP_FOUR_BUTTON) {
 		input_report_key(dev, BTN_FORWARD, hw->up);
 		input_report_key(dev, BTN_BACK, hw->down);
 	}
@@ -302,11 +321,11 @@ static void synaptics_image_sensor_process(struct psmouse *psmouse,
 
 static bool synaptics_has_multifinger(struct synaptics_data *priv)
 {
-	if (SYN_CAP_MULTIFINGER(priv->info.capabilities))
+	if (A_CAP_MULTIFINGER)
 		return true;
 
 	/* Advanced gesture mode also sends multi finger data */
-	return synaptics_has_agm(priv);
+	return A_HAS_AGM;
 }
 
 /*
@@ -324,7 +343,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	if (synaptics_parse_hw_state(psmouse->packet, priv, &hw))
 		return;
 
-	if (SYN_CAP_IMAGE_SENSOR(info->ext_cap_0c)) {
+	if (A_CAP_IMAGE_SENSOR) {
 		synaptics_image_sensor_process(psmouse, &hw);
 		return;
 	}
@@ -352,7 +371,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	if (hw.z > 0 && hw.x > 1) {
 		num_fingers = 1;
 		finger_width = 5;
-		if (SYN_CAP_EXTENDED(info->capabilities)) {
+		if (A_CAP_EXTENDED) {
 			switch (hw.w) {
 			case 0 ... 1:
 				if (synaptics_has_multifinger(priv))
@@ -366,7 +385,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 				 */
 				break;
 			case 4 ... 15:
-				if (SYN_CAP_PALMDETECT(info->capabilities))
+				if (A_CAP_PALMDETECT)
 					finger_width = hw.w;
 				break;
 			}
@@ -381,7 +400,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 		return;
 	}
 
-	if (SYN_CAP_ADV_GESTURE(info->ext_cap_0c))
+	if (A_CAP_ADV_GESTURE)
 		synaptics_report_semi_mt_data(dev, &hw, &priv->agm,
 					      num_fingers);
 
@@ -398,7 +417,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	}
 	input_report_abs(dev, ABS_PRESSURE, hw.z);
 
-	if (SYN_CAP_PALMDETECT(info->capabilities))
+	if (A_CAP_PALMDETECT)
 		input_report_abs(dev, ABS_TOOL_WIDTH, finger_width);
 
 	input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);
