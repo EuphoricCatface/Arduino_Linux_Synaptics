@@ -5,7 +5,7 @@ typedef int8_t s8;
 
 #include "Arduino_Linux_Synaptics.h"
 
-/* Device configurations */
+/**** Device configurations ****/
 /* An arduino device doesn't need to make the configuration dynamic.
  * Look into the capability values and see which your device supports */
 #define A_CAP_IMAGE_SENSOR false
@@ -28,6 +28,58 @@ typedef int8_t s8;
 #define A_X_RES 0x42
 
 static const bool cr48_profile_sensor = false;
+
+/**** Kernel driver constants ****/
+/*
+ * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,
+ * section 2.3.2, which says that they should be valid regardless of the
+ * actual size of the sensor.
+ * Note that newer firmware allows querying device for maximum useable
+ * coordinates.
+ */
+#define XMIN 0
+#define XMAX 6143
+#define YMIN 0
+#define YMAX 6143
+#define XMIN_NOMINAL 1472
+#define XMAX_NOMINAL 5472
+#define YMIN_NOMINAL 1408
+#define YMAX_NOMINAL 4448
+
+/* Size in bits of absolute position values reported by the hardware */
+#define ABS_POS_BITS 13
+
+/*
+ * These values should represent the absolute maximum value that will
+ * be reported for a positive position value. Some Synaptics firmware
+ * uses this value to indicate a finger near the edge of the touchpad
+ * whose precise position cannot be determined.
+ *
+ * At least one touchpad is known to report positions in excess of this
+ * value which are actually negative values truncated to the 13-bit
+ * reporting range. These values have never been observed to be lower
+ * than 8184 (i.e. -8), so we treat all values greater than 8176 as
+ * negative and any other value as positive.
+ */
+#define X_MAX_POSITIVE 8176
+#define Y_MAX_POSITIVE 8176
+
+/* maximum ABS_MT_POSITION displacement (in mm) */
+#define DMAX 10
+
+/*****************************************************************************
+ *	Synaptics communications functions
+ ****************************************************************************/
+
+/*
+ * Synaptics touchpads report the y coordinate from bottom to top, which is
+ * opposite from what userspace expects.
+ * This function is used to invert y before reporting.
+ */
+static int synaptics_invert_y(int y)
+{
+	return YMAX_NOMINAL + YMIN_NOMINAL - y;
+}
 
 /*****************************************************************************
  *	Functions to interpret the absolute mode packets
