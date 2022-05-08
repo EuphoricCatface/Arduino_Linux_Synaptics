@@ -276,6 +276,30 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 	input_sync(dev);
 }
 
+static void synaptics_image_sensor_process(struct psmouse *psmouse,
+					   struct synaptics_hw_state *sgm)
+{
+	struct synaptics_data *priv = psmouse->private;
+	int num_fingers;
+
+	/*
+	 * Update mt_state using the new finger count and current mt_state.
+	 */
+	if (sgm->z == 0)
+		num_fingers = 0;
+	else if (sgm->w >= 4)
+		num_fingers = 1;
+	else if (sgm->w == 0)
+		num_fingers = 2;
+	else if (sgm->w == 1)
+		num_fingers = priv->agm_count ? priv->agm_count : 3;
+	else
+		num_fingers = 4;
+
+	/* Send resulting input events to user space */
+	synaptics_report_mt_data(psmouse, sgm, num_fingers);
+}
+
 static bool synaptics_has_multifinger(struct synaptics_data *priv)
 {
 	if (SYN_CAP_MULTIFINGER(priv->info.capabilities))
