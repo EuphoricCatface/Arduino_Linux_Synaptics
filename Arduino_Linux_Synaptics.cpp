@@ -1,3 +1,5 @@
+#include "Arduino_Linux_Synaptics.h"
+
 /* Device configurations */
 /* An arduino device doesn't need to make the configuration dynamic.
  * Look into the capability values and see which your device supports */
