@@ -390,15 +390,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 
 static psmouse_ret_t synaptics_process_byte(struct psmouse *psmouse)
 {
-	struct synaptics_data *priv = psmouse->private;
-
-	if (psmouse->pktcnt >= 6) { /* Full packet received */
-		synaptics_process_packet(psmouse);
-
-		return PSMOUSE_FULL_PACKET;
-	}
-
-	return synaptics_validate_byte(psmouse, psmouse->pktcnt - 1, priv->pkt_type) ?
-		PSMOUSE_GOOD_DATA : PSMOUSE_BAD_DATA;
+	synaptics_process_packet(psmouse);
+	return PSMOUSE_FULL_PACKET;
 }
 
