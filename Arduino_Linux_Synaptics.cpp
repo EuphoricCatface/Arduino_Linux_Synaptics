@@ -414,7 +414,6 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 {
 	struct input_dev *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->private;
-	struct synaptics_device_info *info = &priv->info;
 	struct synaptics_hw_state hw;
 	int num_fingers;
 	int finger_width;
