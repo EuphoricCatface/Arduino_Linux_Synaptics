@@ -512,9 +512,8 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	dev->println("input_sync(dev);");
 }
 
-static psmouse_ret_t synaptics_process_byte(struct psmouse *psmouse)
+void synaptics_process_byte(struct psmouse *psmouse)
 {
 	synaptics_process_packet(psmouse);
-	return PSMOUSE_FULL_PACKET;
 }
 

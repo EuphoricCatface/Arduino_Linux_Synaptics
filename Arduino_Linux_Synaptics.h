@@ -46,4 +46,6 @@ struct synaptics_data {
 	bool					is_forcepad;
 };
 
+void synaptics_process_byte(struct psmouse *psmouse);
+
 #endif /* _SYNAPTICS_H */
