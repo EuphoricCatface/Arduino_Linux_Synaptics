@@ -489,8 +489,10 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	dev->print("input_report_abs(dev, ABS_PRESSURE, hw.z);");
 	dev->println(hw.z);
 
-	if (A_CAP_PALMDETECT)
-		dev->println("input_report_abs(dev, ABS_TOOL_WIDTH, finger_width);");
+	if (A_CAP_PALMDETECT) {
+		dev->print("input_report_abs(dev, ABS_TOOL_WIDTH, finger_width);");
+		dev->println(finger_width);
+	}
 
 	// QUIRK: we don't need to actually report every case
 	// dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);");
