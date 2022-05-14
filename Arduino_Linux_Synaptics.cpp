@@ -243,11 +243,15 @@ static int synaptics_parse_hw_state(const u8 buf[],
 static void synaptics_report_semi_mt_slot(struct HardwareSerial *dev, int slot,
 					  bool active, int x, int y)
 {
-	dev->println("input_mt_slot(dev, slot);");
-	dev->println("input_mt_report_slot_state(dev, MT_TOOL_FINGER, active);");
+	dev->print("input_mt_slot(dev, slot);");
+	dev->println(slot);
+	dev->print("input_mt_report_slot_state(dev, MT_TOOL_FINGER, active);");
+	dev->println(active);
 	if (active) {
-		dev->println("input_report_abs(dev, ABS_MT_POSITION_X, x);");
-		dev->println("input_report_abs(dev, ABS_MT_POSITION_Y, synaptics_invert_y(y));");
+		dev->print("input_report_abs(dev, ABS_MT_POSITION_X, x);");
+		dev->println(x);
+		dev->print("input_report_abs(dev, ABS_MT_POSITION_Y, synaptics_invert_y(y));");
+		dev->println(y);
 	}
 }
 
@@ -304,8 +308,10 @@ static void synaptics_report_buttons(struct psmouse *psmouse,
 	struct HardwareSerial *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->_private;
 
-	dev->println("input_report_key(dev, BTN_LEFT, hw->left);");
-	dev->println("input_report_key(dev, BTN_RIGHT, hw->right);");
+	dev->print("input_report_key(dev, BTN_LEFT, hw->left);");
+	dev->println(hw->left);
+	dev->print("input_report_key(dev, BTN_RIGHT, hw->right);");
+	dev->println(hw->right);
 
 	if (A_CAP_MIDDLE_BUTTON)
 		dev->println("input_report_key(dev, BTN_MIDDLE, hw->middle);");
@@ -475,18 +481,33 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	if (hw.z < 25) dev->println("input_report_key(dev, BTN_TOUCH, 0);");
 
 	if (num_fingers > 0) {
-		dev->println("input_report_abs(dev, ABS_X, hw.x);");
-		dev->println("input_report_abs(dev, ABS_Y, synaptics_invert_y(hw.y));");
+		dev->print("input_report_abs(dev, ABS_X, hw.x);");
+		dev->println(hw.x);
+		dev->print("input_report_abs(dev, ABS_Y, synaptics_invert_y(hw.y));");
+		dev->println(synaptics_invert_y(hw.y));
 	}
-	dev->println("input_report_abs(dev, ABS_PRESSURE, hw.z);");
+	dev->print("input_report_abs(dev, ABS_PRESSURE, hw.z);");
+	dev->println(hw.z);
 
 	if (A_CAP_PALMDETECT)
 		dev->println("input_report_abs(dev, ABS_TOOL_WIDTH, finger_width);");
 
-	dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);");
-	if (synaptics_has_multifinger(priv)) {
-		dev->println("input_report_key(dev, BTN_TOOL_DOUBLETAP, num_fingers == 2);");
-		dev->println("input_report_key(dev, BTN_TOOL_TRIPLETAP, num_fingers == 3);");
+	// QUIRK: we don't need to actually report every case
+	// dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);");
+	// if (synaptics_has_multifinger(priv)) {
+	//   dev->println("input_report_key(dev, BTN_TOOL_DOUBLETAP, num_fingers == 2);");
+	//   dev->println("input_report_key(dev, BTN_TOOL_TRIPLETAP, num_fingers == 3);");
+	// }
+	switch(num_fingers) {
+		case 1:
+			dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);");
+			break;
+		case 2:
+			dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 2);");
+			break;
+		case 3:
+			dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 3);");
+			break;
 	}
 
 	synaptics_report_buttons(psmouse, &hw);
