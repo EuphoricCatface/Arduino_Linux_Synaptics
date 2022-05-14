@@ -2,7 +2,7 @@
 #define _DUMMY_PSMOUSE_H
 
 struct psmouse {
-	void * dev;
+	HardwareSerial * dev;
 	void * _private;
 	unsigned char packet[8];
 };

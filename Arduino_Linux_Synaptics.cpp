@@ -258,18 +258,18 @@ static int synaptics_parse_hw_state(const u8 buf[],
 	return 0;
 }
 
-static void synaptics_report_semi_mt_slot(struct input_dev *dev, int slot,
+static void synaptics_report_semi_mt_slot(struct HardwareSerial *dev, int slot,
 					  bool active, int x, int y)
 {
-	input_mt_slot(dev, slot);
-	input_mt_report_slot_state(dev, MT_TOOL_FINGER, active);
+	dev->println("input_mt_slot(dev, slot);");
+	dev->println("input_mt_report_slot_state(dev, MT_TOOL_FINGER, active);");
 	if (active) {
-		input_report_abs(dev, ABS_MT_POSITION_X, x);
-		input_report_abs(dev, ABS_MT_POSITION_Y, synaptics_invert_y(y));
+		dev->println("input_report_abs(dev, ABS_MT_POSITION_X, x);");
+		dev->println("input_report_abs(dev, ABS_MT_POSITION_Y, synaptics_invert_y(y));");
 	}
 }
 
-static void synaptics_report_semi_mt_data(struct input_dev *dev,
+static void synaptics_report_semi_mt_data(struct HardwareSerial *dev,
 					  const struct synaptics_hw_state *a,
 					  const struct synaptics_hw_state *b,
 					  int num_fingers)
@@ -291,7 +291,7 @@ static void synaptics_report_semi_mt_data(struct input_dev *dev,
 static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 					 const struct synaptics_hw_state *hw)
 {
-	struct input_dev *dev = psmouse->dev;
+	struct HardwareSerial *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->_private;
 	int ext_bits = (A_CAP_MULTI_BUTTON_NO + 1) >> 1;
 	int i;
@@ -307,10 +307,10 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 
 	if (!A_CAP_EXT_BUTTONS_STICK) {
 		for (i = 0; i < ext_bits; i++) {
-			input_report_key(dev, BTN_0 + 2 * i,
-				hw->ext_buttons & (1 << i));
-			input_report_key(dev, BTN_1 + 2 * i,
-				hw->ext_buttons & (1 << (i + ext_bits)));
+			dev->println("input_report_key(dev, BTN_0 + 2 * i,\
+				hw->ext_buttons & (1 << i));");
+			dev->println("input_report_key(dev, BTN_1 + 2 * i,\
+				hw->ext_buttons & (1 << (i + ext_bits)));");
 		}
 		return;
 	}
@@ -319,18 +319,18 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 static void synaptics_report_buttons(struct psmouse *psmouse,
 				     const struct synaptics_hw_state *hw)
 {
-	struct input_dev *dev = psmouse->dev;
+	struct HardwareSerial *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->_private;
 
-	input_report_key(dev, BTN_LEFT, hw->left);
-	input_report_key(dev, BTN_RIGHT, hw->right);
+	dev->println("input_report_key(dev, BTN_LEFT, hw->left);");
+	dev->println("input_report_key(dev, BTN_RIGHT, hw->right);");
 
 	if (A_CAP_MIDDLE_BUTTON)
-		input_report_key(dev, BTN_MIDDLE, hw->middle);
+		dev->println("input_report_key(dev, BTN_MIDDLE, hw->middle);");
 
 	if (A_CAP_FOUR_BUTTON) {
-		input_report_key(dev, BTN_FORWARD, hw->up);
-		input_report_key(dev, BTN_BACK, hw->down);
+		dev->println("input_report_key(dev, BTN_FORWARD, hw->up);");
+		dev->println("input_report_key(dev, BTN_BACK, hw->down);");
 	}
 
 	synaptics_report_ext_buttons(psmouse, hw);
@@ -340,10 +340,11 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 				     const struct synaptics_hw_state *sgm,
 				     int num_fingers)
 {
-	struct input_dev *dev = psmouse->dev;
+	struct HardwareSerial *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->_private;
 	const struct synaptics_hw_state *hw[2] = { sgm, &priv->agm };
-	struct input_mt_pos pos[2];
+	// struct input_mt_pos pos[2];
+	struct { int x; int y; } pos[2];
 	int slot[2], nsemi, i;
 
 	nsemi = constrain(num_fingers, 0, 2);
@@ -353,27 +354,27 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 		pos[i].y = synaptics_invert_y(hw[i]->y);
 	}
 
-	input_mt_assign_slots(dev, slot, pos, nsemi, DMAX * A_X_RES);
+	dev->println("input_mt_assign_slots(dev, slot, pos, nsemi, DMAX * A_X_RES);");
 
 	for (i = 0; i < nsemi; i++) {
-		input_mt_slot(dev, slot[i]);
-		input_mt_report_slot_state(dev, MT_TOOL_FINGER, true);
-		input_report_abs(dev, ABS_MT_POSITION_X, pos[i].x);
-		input_report_abs(dev, ABS_MT_POSITION_Y, pos[i].y);
-		input_report_abs(dev, ABS_MT_PRESSURE, hw[i]->z);
+		dev->println("input_mt_slot(dev, slot[i]);");
+		dev->println("input_mt_report_slot_state(dev, MT_TOOL_FINGER, true);");
+		dev->println("input_report_abs(dev, ABS_MT_POSITION_X, pos[i].x);");
+		dev->println("input_report_abs(dev, ABS_MT_POSITION_Y, pos[i].y);");
+		dev->println("input_report_abs(dev, ABS_MT_PRESSURE, hw[i]->z);");
 	}
 
-	input_mt_drop_unused(dev);
+	dev->println("input_mt_drop_unused(dev);");
 
 	/* Don't use active slot count to generate BTN_TOOL events. */
-	input_mt_report_pointer_emulation(dev, false);
+	dev->println("input_mt_report_pointer_emulation(dev, false);");
 
 	/* Send the number of fingers reported by touchpad itself. */
-	input_mt_report_finger_count(dev, num_fingers);
+	dev->println("input_mt_report_finger_count(dev, num_fingers);");
 
 	synaptics_report_buttons(psmouse, sgm);
 
-	input_sync(dev);
+	dev->println("input_sync(dev);");
 }
 
 static void synaptics_image_sensor_process(struct psmouse *psmouse,
@@ -414,7 +415,7 @@ static bool synaptics_has_multifinger(struct synaptics_data *priv)
  */
 static void synaptics_process_packet(struct psmouse *psmouse)
 {
-	struct input_dev *dev = psmouse->dev;
+	struct HardwareSerial *dev = psmouse->dev;
 	struct synaptics_data *priv = psmouse->_private;
 	struct synaptics_hw_state hw;
 	int num_fingers;
@@ -432,17 +433,17 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 		priv->scroll += hw.scroll;
 
 		while (priv->scroll >= 4) {
-			input_report_key(dev, BTN_BACK, !hw.down);
-			input_sync(dev);
-			input_report_key(dev, BTN_BACK, hw.down);
-			input_sync(dev);
+			dev->println("input_report_key(dev, BTN_BACK, !hw.down);");
+			dev->println("input_sync(dev);");
+			dev->println("input_report_key(dev, BTN_BACK, hw.down);");
+			dev->println("input_sync(dev);");
 			priv->scroll -= 4;
 		}
 		while (priv->scroll <= -4) {
-			input_report_key(dev, BTN_FORWARD, !hw.up);
-			input_sync(dev);
-			input_report_key(dev, BTN_FORWARD, hw.up);
-			input_sync(dev);
+			dev->println("input_report_key(dev, BTN_FORWARD, !hw.up);");
+			dev->println("input_sync(dev);");
+			dev->println("input_report_key(dev, BTN_FORWARD, hw.up);");
+			dev->println("input_sync(dev);");
 			priv->scroll += 4;
 		}
 		return;
@@ -488,27 +489,27 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	 * BTN_TOUCH has to be first as mousedev relies on it when doing
 	 * absolute -> relative conversion
 	 */
-	if (hw.z > 30) input_report_key(dev, BTN_TOUCH, 1);
-	if (hw.z < 25) input_report_key(dev, BTN_TOUCH, 0);
+	if (hw.z > 30) dev->println("input_report_key(dev, BTN_TOUCH, 1);");
+	if (hw.z < 25) dev->println("input_report_key(dev, BTN_TOUCH, 0);");
 
 	if (num_fingers > 0) {
-		input_report_abs(dev, ABS_X, hw.x);
-		input_report_abs(dev, ABS_Y, synaptics_invert_y(hw.y));
+		dev->println("input_report_abs(dev, ABS_X, hw.x);");
+		dev->println("input_report_abs(dev, ABS_Y, synaptics_invert_y(hw.y));");
 	}
-	input_report_abs(dev, ABS_PRESSURE, hw.z);
+	dev->println("input_report_abs(dev, ABS_PRESSURE, hw.z);");
 
 	if (A_CAP_PALMDETECT)
-		input_report_abs(dev, ABS_TOOL_WIDTH, finger_width);
+		dev->println("input_report_abs(dev, ABS_TOOL_WIDTH, finger_width);");
 
-	input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);
+	dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);");
 	if (synaptics_has_multifinger(priv)) {
-		input_report_key(dev, BTN_TOOL_DOUBLETAP, num_fingers == 2);
-		input_report_key(dev, BTN_TOOL_TRIPLETAP, num_fingers == 3);
+		dev->println("input_report_key(dev, BTN_TOOL_DOUBLETAP, num_fingers == 2);");
+		dev->println("input_report_key(dev, BTN_TOOL_TRIPLETAP, num_fingers == 3);");
 	}
 
 	synaptics_report_buttons(psmouse, &hw);
 
-	input_sync(dev);
+	dev->println("input_sync(dev);");
 }
 
 static psmouse_ret_t synaptics_process_byte(struct psmouse *psmouse)
