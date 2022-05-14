@@ -1,23 +1,5 @@
-#include <stdint.h>
-typedef uint8_t u8;
-typedef uint32_t u32;
-typedef int8_t s8;
-
-#include "input-event-codes.h"
-
-/*
- * MT_TOOL types (from input.h of Linux)
- */
-#define MT_TOOL_FINGER		0x00
-#define MT_TOOL_PEN		0x01
-#define MT_TOOL_PALM		0x02
-#define MT_TOOL_DIAL		0x0a
-#define MT_TOOL_MAX		0x0f
-
 #include "Arduino.h"
 #include "Arduino_Linux_Synaptics.h"
-
-#include "dummy_psmouse.h"
 
 /**** Device configurations ****/
 /* An arduino device doesn't need to make the configuration dynamic.
@@ -516,4 +498,3 @@ void synaptics_process_byte(struct psmouse *psmouse)
 {
 	synaptics_process_packet(psmouse);
 }
-

@@ -6,6 +6,24 @@
 #ifndef _SYNAPTICS_H
 #define _SYNAPTICS_H
 
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef int8_t s8;
+
+#include "input-event-codes.h"
+
+/*
+ * MT_TOOL types (from input.h of Linux)
+ */
+#define MT_TOOL_FINGER    0x00
+#define MT_TOOL_PEN   0x01
+#define MT_TOOL_PALM    0x02
+#define MT_TOOL_DIAL    0x0a
+#define MT_TOOL_MAX   0x0f
+
+#include "dummy_psmouse.h"
+
 /*
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
