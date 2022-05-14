@@ -59,10 +59,11 @@ void setup(void){
 }
 
 void loop(void){
+  static synaptics_data _private;
   device->read_data();
   psmouse _psmouse;
-  _psmouse.dev = (void*)&Serial;
-  _psmouse._private = new synaptics_hw_state;
+  _psmouse.dev = &Serial;
+  _psmouse._private = &_private;
   for (int i=0; i<6; i++)
     _psmouse.packet[i] = device->data[i];
   synaptics_process_byte(&_psmouse);
