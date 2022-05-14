@@ -17,6 +17,8 @@ typedef int8_t s8;
 #include "Arduino.h"
 #include "Arduino_Linux_Synaptics.h"
 
+#include "dummy_psmouse.h"
+
 /**** Device configurations ****/
 /* An arduino device doesn't need to make the configuration dynamic.
  * Look into the capability values and see which your device supports */
@@ -290,7 +292,7 @@ static void synaptics_report_ext_buttons(struct psmouse *psmouse,
 					 const struct synaptics_hw_state *hw)
 {
 	struct input_dev *dev = psmouse->dev;
-	struct synaptics_data *priv = psmouse->private;
+	struct synaptics_data *priv = psmouse->_private;
 	int ext_bits = (A_CAP_MULTI_BUTTON_NO + 1) >> 1;
 	int i;
 
@@ -318,7 +320,7 @@ static void synaptics_report_buttons(struct psmouse *psmouse,
 				     const struct synaptics_hw_state *hw)
 {
 	struct input_dev *dev = psmouse->dev;
-	struct synaptics_data *priv = psmouse->private;
+	struct synaptics_data *priv = psmouse->_private;
 
 	input_report_key(dev, BTN_LEFT, hw->left);
 	input_report_key(dev, BTN_RIGHT, hw->right);
@@ -339,7 +341,7 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 				     int num_fingers)
 {
 	struct input_dev *dev = psmouse->dev;
-	struct synaptics_data *priv = psmouse->private;
+	struct synaptics_data *priv = psmouse->_private;
 	const struct synaptics_hw_state *hw[2] = { sgm, &priv->agm };
 	struct input_mt_pos pos[2];
 	int slot[2], nsemi, i;
@@ -377,7 +379,7 @@ static void synaptics_report_mt_data(struct psmouse *psmouse,
 static void synaptics_image_sensor_process(struct psmouse *psmouse,
 					   struct synaptics_hw_state *sgm)
 {
-	struct synaptics_data *priv = psmouse->private;
+	struct synaptics_data *priv = psmouse->_private;
 	int num_fingers;
 
 	/*
@@ -413,7 +415,7 @@ static bool synaptics_has_multifinger(struct synaptics_data *priv)
 static void synaptics_process_packet(struct psmouse *psmouse)
 {
 	struct input_dev *dev = psmouse->dev;
-	struct synaptics_data *priv = psmouse->private;
+	struct synaptics_data *priv = psmouse->_private;
 	struct synaptics_hw_state hw;
 	int num_fingers;
 	int finger_width;
