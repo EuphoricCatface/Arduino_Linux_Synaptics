@@ -95,27 +95,44 @@ void loop(void){
   Serial.println();
   */
   /******** Packet construction ********/
-  /* Cursor pose */
-  static bool old_single_touch = false;
+  /* pointer movement */
   int rel_x = 0, rel_y = 0;
   static int old_x = 0, old_y = 0;
-  
-  bool single_touch = (fingers == 1) && dev.btn_touch;
-  if (single_touch) {
-    if (!old_single_touch) {
-      rel_x = 0; rel_y = 0;
-      old_x = dev.abs_x; old_y = dev.abs_y;
-    } else {
-      rel_x = dev.abs_x - old_x; old_x = dev.abs_x;
-      rel_y = dev.abs_y - old_y; old_y = dev.abs_y;
-    }
-  }
-  old_single_touch = single_touch;
+  rel_x = dev.abs_x - old_x; old_x = dev.abs_x;
+  rel_y = dev.abs_y - old_y; old_y = dev.abs_y;
 
   rel_x = rel_x >> 2; rel_y = rel_y >> 2;
   if (rel_x < 0) rel_x++;
   if (rel_y < 0) rel_y++;
 
-  if (rel_x || rel_y)
-    bluetooth.sendMouseState(0, rel_x, rel_y, 0);
+  /* Cursor pose */
+  static bool old_single_touch = false;
+  int cur_dx = 0, cur_dy = 0;
+  
+  bool single_touch = (fingers == 1) && dev.btn_touch;
+  if (single_touch) {
+    if (!old_single_touch) {
+      cur_dx = 0; cur_dy = 0;
+    } else {
+      cur_dx = rel_x; cur_dy = rel_y;
+    }
+  }
+  old_single_touch = single_touch;
+
+  /* Scroll */
+  static bool old_double_touch = false;
+  int scr_y = 0;
+
+  bool double_touch = (fingers == 2);
+  if (double_touch) {
+    if (!old_double_touch) {
+      scr_y = 0;
+    } else {
+      scr_y = rel_y;
+    }
+  }
+  old_double_touch = double_touch;
+
+  if (cur_dx || cur_dy || scr_y)
+    bluetooth.sendMouseState(0, cur_dx, cur_dy, scr_y);
 }
