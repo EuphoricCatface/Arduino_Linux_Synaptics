@@ -115,6 +115,7 @@ void loop(void){
   static uint8_t tap_btn_candidate = 0;
   static int32_t tap_effective_end = -1;
   static uint8_t tap_effective_btn = 0;
+  bool double_tap = false;
   uint8_t gest_btn = 0;
   do {
     if (phy_btn) {
@@ -122,6 +123,8 @@ void loop(void){
       tap_btn_candidate = 0;
       tap_effective_end = -1;
       tap_effective_btn = 0;
+      double_tap = false;
+
       break; // do~while(0) as goto
     }
 
@@ -135,6 +138,8 @@ void loop(void){
     }
     if (!dev.btn_touch) {
       if (tap_detect_end > millis()) { // Tap detected
+        if (tap_effective_btn == tap_btn_candidate)
+          double_tap = true;
         tap_effective_btn = tap_btn_candidate;
         tap_effective_end = millis() + TAP_DURATION;
       }
@@ -149,9 +154,13 @@ void loop(void){
   if (tap_effective_end != -1) {
     if (tap_effective_end > millis()) {
       gest_btn = tap_effective_btn;
+      if (double_tap)
+        gest_btn = 0;
     }
-    else
+    else {
       tap_effective_end = -1;
+      tap_effective_btn = 0;
+    }
   }
 
   if (gest_btn) btn = gest_btn;
