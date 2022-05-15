@@ -107,7 +107,11 @@ void loop(void){
   }
   old_single_touch = fingers == 1;
 
-  bluetooth.sendMouseState(0, rel_x, rel_y, 0);
+  rel_x = rel_x >> 2; rel_y = rel_y >> 2;
+  if (rel_x < 0) rel_x++;
+  if (rel_y < 0) rel_y++;
+
+  if (rel_x && rel_y)
+    bluetooth.sendMouseState(0, rel_x, rel_y, 0);
   memset(&dev, 0, sizeof(dev));
-  delay(20);
 }
