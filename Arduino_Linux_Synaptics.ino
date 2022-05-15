@@ -113,19 +113,24 @@ void loop(void){
     if (phy_btn) break; // do~while(0) as goto
     
     static int32_t tap_detect_end = -1;
+    static uint8_t tap_candidate = 0;
     // Every tap will have tap_detect_end, even if the time expires.
     // static bool old_btn_touch = false; // for tap-drag detection
     if (tap_detect_end == -1) {
       if (!dev.btn_touch)
         break;
       tap_detect_end = millis() + 200;
+      tap_candidate = fingers;
       break;
     }
     if (!dev.btn_touch) {
       if (tap_detect_end > millis())
-        gest_btn = 0x01;
+        gest_btn = tap_candidate;
       tap_detect_end = -1;
+      tap_candidate = 0;
     }
+    if (fingers > tap_candidate)
+      tap_candidate = fingers;
   } while(0);
 
   if (gest_btn) btn = gest_btn;
