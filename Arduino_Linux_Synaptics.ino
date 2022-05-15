@@ -97,12 +97,42 @@ void loop(void){
   
   /******** Packet construction ********/
 
-  /* Physical buttons */
-  static uint8_t old_phy_btn = 0;
+  /* Buttons */
+  static uint8_t old_btn = 0;
+  uint8_t btn = 0;
+  /* - Physical */
   uint8_t phy_btn = ((uint8_t)dev.btn_right << 1) |
                     ((uint8_t)dev.btn_left);
-  uint8_t phy_btn_xor = old_phy_btn ^ phy_btn;
-  old_phy_btn = phy_btn;
+  btn = phy_btn;
+
+  /* - Tap gestures */
+  // Is eating 200ms of input tolerable?
+  // -> No it's not.
+  uint8_t gest_btn = 0;
+  do {
+    if (phy_btn) break; // do~while(0) as goto
+    
+    static int32_t tap_detect_end = -1;
+    // Every tap will have tap_detect_end, even if the time expires.
+    // static bool old_btn_touch = false; // for tap-drag detection
+    if (tap_detect_end == -1) {
+      if (!dev.btn_touch)
+        break;
+      tap_detect_end = millis() + 200;
+      break;
+    }
+    if (!dev.btn_touch) {
+      if (tap_detect_end > millis())
+        gest_btn = 0x01;
+      tap_detect_end = -1;
+    }
+  } while(0);
+
+  if (gest_btn) btn = gest_btn;
+
+  /* - cleanup */
+  uint8_t btn_xor = old_btn ^ btn;
+  old_btn = btn;
   
   /* pointer movement */
   int rel_x = 0, rel_y = 0;
@@ -142,24 +172,6 @@ void loop(void){
   }
   old_double_touch = double_touch;
 
-  /* Tap detection delay test */
-  // Is eating 200ms of input tolerable?
-  // -> No it's not.
-  static int32_t tap_detect_end = -1;
-  if (tap_detect_end != -1) {
-    if (millis() > tap_detect_end) {
-      if (!dev.btn_touch)
-        tap_detect_end = -1;
-    } else {
-      cur_dx = 0;
-      cur_dy = 0;
-      scr_y = 0;
-    }
-  } else {
-    if (dev.btn_touch)
-      tap_detect_end = millis() + 200;
-  }
-
-  if (phy_btn_xor || cur_dx || cur_dy || scr_y)
-    bluetooth.sendMouseState(phy_btn, cur_dx, cur_dy, scr_y);
+  if (btn_xor || cur_dx || cur_dy || scr_y)
+    bluetooth.sendMouseState(btn, cur_dx, cur_dy, scr_y);
 }
