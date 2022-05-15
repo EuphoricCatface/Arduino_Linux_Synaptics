@@ -177,6 +177,9 @@ void loop(void){
   }
   old_double_touch = double_touch;
 
+  scr_y = scr_y >> 3;
+  if (scr_y < 0) scr_y++;
+
   if (btn_xor || cur_dx || cur_dy || scr_y)
     bluetooth.sendMouseState(btn, cur_dx, cur_dy, scr_y);
 }
