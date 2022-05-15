@@ -3,7 +3,11 @@
 
 /**** Device configurations ****/
 /* An arduino device doesn't need to make the configuration dynamic.
- * Look into the capability values and see which your device supports */
+ * Look into the capability values and see which your device supports.
+ * Refer to Synaptics document PN: 511-000275-01 Rev. B
+ * (You are welcomed if you can tell me newer, better documentation!)
+ * and the header of the Linux kernel.
+ */
 #define A_CAP_IMAGE_SENSOR false
 #define A_CAP_EXTENDED true
 #define A_CAP_MULTIFINGER false
