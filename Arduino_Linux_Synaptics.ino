@@ -1,5 +1,6 @@
 #include "Synaptics.h"
 #include "Arduino_Linux_Synaptics.h"
+#include "dummy_psmouse.h"
 
 Synaptics *device = nullptr;
 
@@ -60,13 +61,17 @@ void setup(void){
 }
 
 void loop(void){
-  static synaptics_data _private;
   device->read_data();
+
   psmouse _psmouse;
-  _psmouse.dev = &Serial;
+  static synaptics_data _private;
+  static a_input_dev dev;
+
+  _psmouse.dev = &dev;
   _psmouse._private = &_private;
   for (int i=0; i<6; i++)
     _psmouse.packet[i] = device->data[i];
+
   synaptics_process_byte(&_psmouse);
   delay(20);
 }
