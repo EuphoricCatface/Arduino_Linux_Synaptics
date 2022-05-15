@@ -505,10 +505,10 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 			dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 1);");
 			break;
 		case 2:
-			dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 2);");
+			dev->println("input_report_key(dev, BTN_TOOL_DOUBLETAP, num_fingers == 2);");
 			break;
 		case 3:
-			dev->println("input_report_key(dev, BTN_TOOL_FINGER, num_fingers == 3);");
+			dev->println("input_report_key(dev, BTN_TOOL_TRIPLETAP, num_fingers == 3);");
 			break;
 	}
 
