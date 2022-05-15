@@ -67,10 +67,6 @@ void setup(void){
 }
 
 void loop(void){
-  int rel_x = 0, rel_y = 0;
-  static int old_x = 0, old_y = 0;
-  static bool old_single_touch = false;
-  
   device->read_data();
 
   psmouse _psmouse;
@@ -86,6 +82,8 @@ void loop(void){
   uint8_t fingers = ((uint8_t)dev.btn_tool_tripletap << 2) |
                     ((uint8_t)dev.btn_tool_doubletap << 1) |
                     ((uint8_t)dev.btn_tool_finger);
+  // These do not get updated on release
+  dev.btn_tool_tripletap = dev.btn_tool_doubletap = dev.btn_tool_finger = false;
   /*
   Serial.print("x: ");  Serial.print(dev.abs_x);  Serial.print(" y: ");  Serial.print(dev.abs_y);
   Serial.print(" z: ");  Serial.print(dev.abs_pressure);  Serial.print(" w: ");  Serial.print(dev.abs_tool_width);
@@ -96,7 +94,14 @@ void loop(void){
   Serial.print("left: ");  Serial.print(dev.btn_left);  Serial.print(" right: ");  Serial.print(dev.btn_right);  Serial.print(" fingers: ");  Serial.print(fingers);
   Serial.println();
   */
-  if (fingers == 1) {
+  /******** Packet construction ********/
+  /* Cursor pose */
+  static bool old_single_touch = false;
+  int rel_x = 0, rel_y = 0;
+  static int old_x = 0, old_y = 0;
+  
+  bool single_touch = (fingers == 1) && dev.btn_touch;
+  if (single_touch) {
     if (!old_single_touch) {
       rel_x = 0; rel_y = 0;
       old_x = dev.abs_x; old_y = dev.abs_y;
@@ -105,13 +110,12 @@ void loop(void){
       rel_y = dev.abs_y - old_y; old_y = dev.abs_y;
     }
   }
-  old_single_touch = fingers == 1;
+  old_single_touch = single_touch;
 
   rel_x = rel_x >> 2; rel_y = rel_y >> 2;
   if (rel_x < 0) rel_x++;
   if (rel_y < 0) rel_y++;
 
-  if (rel_x && rel_y)
+  if (rel_x || rel_y)
     bluetooth.sendMouseState(0, rel_x, rel_y, 0);
-  memset(&dev, 0, sizeof(dev));
 }
