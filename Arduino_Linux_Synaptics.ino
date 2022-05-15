@@ -29,7 +29,7 @@ void setup(void){
   Serial.begin(115200);
   device = new Synaptics(3, 2);
   //Serial.println("Init done!");
-  device->set_mode(0x81); // Absolute mode + disgest (= EW mode) + W mode
+  device->set_mode(0xc5); // Absolute mode + fast mode + DisGest (= EW mode) + W mode
   device->set_agm();
   /*
   Serial.print("read_modes: ");
