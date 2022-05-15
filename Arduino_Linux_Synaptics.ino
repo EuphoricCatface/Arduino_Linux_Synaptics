@@ -25,7 +25,8 @@ void setup(void){
   Serial.begin(115200);
   device = new Synaptics(3, 2);
   Serial.println("Init done!");
-  device->set_mode(0x81); // "New" absolute mode
+  device->set_mode(0x85); // "New" absolute mode + disgest (= EW mode) + W mode
+  // device->set_agm(); // Linux has this, but seems to have no effect on my device
   Serial.print("read_modes: "); // this is done inside the c-tor
   print_data();
   Serial.print("identify: ");
