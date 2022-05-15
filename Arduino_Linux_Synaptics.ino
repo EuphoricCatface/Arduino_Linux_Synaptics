@@ -142,6 +142,23 @@ void loop(void){
   }
   old_double_touch = double_touch;
 
+  /* Tap detection delay test */
+  // Is eating 200ms of input tolerable?
+  static int32_t tap_detect_end = -1;
+  if (tap_detect_end != -1) {
+    if (millis() > tap_detect_end) {
+      if (!dev.btn_touch)
+        tap_detect_end = -1;
+    } else {
+      cur_dx = 0;
+      cur_dy = 0;
+      scr_y = 0;
+    }
+  } else {
+    if (dev.btn_touch)
+      tap_detect_end = millis() + 200;
+  }
+
   if (phy_btn_xor || cur_dx || cur_dy || scr_y)
     bluetooth.sendMouseState(phy_btn, cur_dx, cur_dy, scr_y);
 }
