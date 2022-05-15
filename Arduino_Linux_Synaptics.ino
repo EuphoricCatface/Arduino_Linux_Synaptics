@@ -62,6 +62,10 @@ void setup(void){
 }
 
 void loop(void){
+  int rel_x = 0, rel_y = 0;
+  static int old_x = 0, old_y = 0;
+  static bool old_single_touch = false;
+  
   device->read_data();
 
   psmouse _psmouse;
@@ -74,37 +78,31 @@ void loop(void){
     _psmouse.packet[i] = device->data[i];
 
   synaptics_process_byte(&_psmouse);
-  Serial.print("x: ");
-  Serial.print(dev.abs_x);
-  Serial.print(" y: ");
-  Serial.print(dev.abs_y);
-  Serial.print(" z: ");
-  Serial.print(dev.abs_pressure);
-  Serial.print(" w: ");
-  Serial.print(dev.abs_tool_width);
-  Serial.println();
-  Serial.print("mt_0 ");
-  Serial.print(dev.mt_slot[0].mt_tool_finger);
-  Serial.print(" x: ");
-  Serial.print(dev.mt_slot[0].abs_mt_position_x);
-  Serial.print(" y: ");
-  Serial.print(dev.mt_slot[0].abs_mt_position_y);
-  Serial.print(" mt_1 ");
-  Serial.print(dev.mt_slot[1].mt_tool_finger);
-  Serial.print(" x: ");
-  Serial.print(dev.mt_slot[1].abs_mt_position_x);
-  Serial.print(" y: ");
-  Serial.print(dev.mt_slot[1].abs_mt_position_y);
-  Serial.println();
-  Serial.print("left: ");
-  Serial.print(dev.btn_left);
-  Serial.print(" right: ");
-  Serial.print(dev.btn_right);
-  Serial.print(" fingers: ");
   uint8_t fingers = ((uint8_t)dev.btn_tool_tripletap << 2) |
                     ((uint8_t)dev.btn_tool_doubletap << 1) |
                     ((uint8_t)dev.btn_tool_finger);
-  Serial.print(fingers);
+  /*
+  Serial.print("x: ");  Serial.print(dev.abs_x);  Serial.print(" y: ");  Serial.print(dev.abs_y);
+  Serial.print(" z: ");  Serial.print(dev.abs_pressure);  Serial.print(" w: ");  Serial.print(dev.abs_tool_width);
+  Serial.println();
+  Serial.print("mt_0 ");  Serial.print(dev.mt_slot[0].mt_tool_finger);  Serial.print(" x: ");  Serial.print(dev.mt_slot[0].abs_mt_position_x);  Serial.print(" y: ");  Serial.print(dev.mt_slot[0].abs_mt_position_y);
+  Serial.print(" mt_1 ");  Serial.print(dev.mt_slot[1].mt_tool_finger);  Serial.print(" x: ");  Serial.print(dev.mt_slot[1].abs_mt_position_x);  Serial.print(" y: ");  Serial.print(dev.mt_slot[1].abs_mt_position_y);
+  Serial.println();
+  Serial.print("left: ");  Serial.print(dev.btn_left);  Serial.print(" right: ");  Serial.print(dev.btn_right);  Serial.print(" fingers: ");  Serial.print(fingers);
+  Serial.println();
+  */
+  if (fingers == 1) {
+    if (!old_single_touch) {
+      rel_x = 0; rel_y = 0;
+      old_x = dev.abs_x; old_y = dev.abs_y;
+    } else {
+      rel_x = dev.abs_x - old_x; old_x = dev.abs_x;
+      rel_y = dev.abs_y - old_y; old_y = dev.abs_y;
+    }
+  }
+  old_single_touch = fingers == 1;
+  Serial.print("rel_x: "); Serial.print(rel_x);
+  Serial.print(" rel_y: "); Serial.print(rel_y);
   Serial.println();
   memset(&dev, 0, sizeof(dev));
   delay(20);
