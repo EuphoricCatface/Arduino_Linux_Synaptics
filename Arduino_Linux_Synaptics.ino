@@ -94,7 +94,16 @@ void loop(void){
   Serial.print("left: ");  Serial.print(dev.btn_left);  Serial.print(" right: ");  Serial.print(dev.btn_right);  Serial.print(" fingers: ");  Serial.print(fingers);
   Serial.println();
   */
+  
   /******** Packet construction ********/
+
+  /* Physical buttons */
+  static uint8_t old_phy_btn = 0;
+  uint8_t phy_btn = ((uint8_t)dev.btn_right << 1) |
+                    ((uint8_t)dev.btn_left);
+  uint8_t phy_btn_xor = old_phy_btn ^ phy_btn;
+  old_phy_btn = phy_btn;
+  
   /* pointer movement */
   int rel_x = 0, rel_y = 0;
   static int old_x = 0, old_y = 0;
@@ -133,6 +142,6 @@ void loop(void){
   }
   old_double_touch = double_touch;
 
-  if (cur_dx || cur_dy || scr_y)
-    bluetooth.sendMouseState(0, cur_dx, cur_dy, scr_y);
+  if (phy_btn_xor || cur_dx || cur_dy || scr_y)
+    bluetooth.sendMouseState(phy_btn, cur_dx, cur_dy, scr_y);
 }
