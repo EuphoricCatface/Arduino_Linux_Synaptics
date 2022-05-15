@@ -494,10 +494,13 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 	switch(num_fingers) {
 		case 1:
 			dev->btn_tool_finger = true;
+			break;
 		case 2:
 			dev->btn_tool_doubletap = true;
+			break;
 		case 3:
 			dev->btn_tool_tripletap = true;
+			break;
 	}
 
 	synaptics_report_buttons(psmouse, &hw);

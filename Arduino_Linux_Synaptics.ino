@@ -26,9 +26,10 @@ void setup(void){
   Serial.begin(115200);
   device = new Synaptics(3, 2);
   Serial.println("Init done!");
-  device->set_mode(0x85); // "New" absolute mode + disgest (= EW mode) + W mode
-  // device->set_agm(); // Linux has this, but seems to have no effect on my device
-  Serial.print("read_modes: "); // this is done inside the c-tor
+  device->set_mode(0x81); // Absolute mode + disgest (= EW mode) + W mode
+  device->set_agm();
+  Serial.print("read_modes: ");
+  device->read_modes();
   print_data();
   Serial.print("identify: ");
   device->identify();
@@ -73,5 +74,25 @@ void loop(void){
     _psmouse.packet[i] = device->data[i];
 
   synaptics_process_byte(&_psmouse);
+  Serial.print("x: ");
+  Serial.print(dev.abs_x);
+  Serial.print(" y: ");
+  Serial.print(dev.abs_y);
+  Serial.print(" z: ");
+  Serial.print(dev.abs_pressure);
+  Serial.print(" w: ");
+  Serial.print(dev.abs_tool_width);
+  Serial.println();
+  Serial.print("left: ");
+  Serial.print(dev.btn_left);
+  Serial.print(" right: ");
+  Serial.print(dev.btn_right);
+  Serial.print(" fingers: ");
+  uint8_t fingers = ((uint8_t)dev.btn_tool_tripletap << 2) |
+                    ((uint8_t)dev.btn_tool_doubletap << 1) |
+                    ((uint8_t)dev.btn_tool_finger);
+  Serial.print(fingers);
+  Serial.println();
+  memset(&dev, 0, sizeof(dev));
   delay(20);
 }
