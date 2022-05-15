@@ -5,6 +5,8 @@
 #include "Bluetooth.h"
 Bluetooth bluetooth(115200, false, 0, 0);
 
+#define TAP_DURATION 200
+
 Synaptics *device = nullptr;
 
 void print_data(bool data_packet=false) {
@@ -106,32 +108,51 @@ void loop(void){
   btn = phy_btn;
 
   /* - Tap gestures */
-  // Is eating 200ms of input tolerable?
+  // Is eating TAP_DURATION(ms) of input tolerable?
   // -> No it's not.
+  static int32_t tap_detect_end = -1;
+  // Every tap will have tap_detect_end, even if the time expires.
+  static uint8_t tap_btn_candidate = 0;
+  static int32_t tap_effective_end = -1;
+  static uint8_t tap_effective_btn = 0;
   uint8_t gest_btn = 0;
   do {
-    if (phy_btn) break; // do~while(0) as goto
-    
-    static int32_t tap_detect_end = -1;
-    static uint8_t tap_candidate = 0;
-    // Every tap will have tap_detect_end, even if the time expires.
-    // static bool old_btn_touch = false; // for tap-drag detection
+    if (phy_btn) {
+      tap_detect_end = -2; // invalidate any gesture in progress
+      tap_btn_candidate = 0;
+      tap_effective_end = -1;
+      tap_effective_btn = 0;
+      break; // do~while(0) as goto
+    }
+
     if (tap_detect_end == -1) {
       if (!dev.btn_touch)
         break;
-      tap_detect_end = millis() + 200;
-      tap_candidate = fingers;
+      // Touch starts
+      tap_detect_end = millis() + TAP_DURATION;
+      tap_btn_candidate = fingers;
       break;
     }
     if (!dev.btn_touch) {
-      if (tap_detect_end > millis())
-        gest_btn = tap_candidate;
+      if (tap_detect_end > millis()) { // Tap detected
+        tap_effective_btn = tap_btn_candidate;
+        tap_effective_end = millis() + TAP_DURATION;
+      }
+      // Too late! Not a tap
       tap_detect_end = -1;
-      tap_candidate = 0;
+      tap_btn_candidate = 0;
     }
-    if (fingers > tap_candidate)
-      tap_candidate = fingers;
+    if (fingers > tap_btn_candidate)
+      tap_btn_candidate = fingers; // assuming only one button at a time registers as "fingers"
   } while(0);
+
+  if (tap_effective_end != -1) {
+    if (tap_effective_end > millis()) {
+      gest_btn = tap_effective_btn;
+    }
+    else
+      tap_effective_end = -1;
+  }
 
   if (gest_btn) btn = gest_btn;
 
