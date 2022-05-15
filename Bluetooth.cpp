@@ -23,7 +23,9 @@
 #include <SoftwareSerial.h>
 
 #include "Bluetooth.h"
-#include "PS2Keyboard.h"
+// #include "PS2Keyboard.h"
+#define MAX_KEYS_PRESSED 5
+// whatever
 
 Bluetooth::Bluetooth(uint32_t baudRate, bool useSoftwareSerial, uint8_t softwareRXPin, uint8_t softwareTXPin)
 {

@@ -505,7 +505,7 @@ static void synaptics_process_packet(struct psmouse *psmouse)
 
 	synaptics_report_buttons(psmouse, &hw);
 
-	Serial.println("input_sync(dev);");
+	// Serial.println("input_sync(dev);");
 }
 
 void synaptics_process_byte(struct psmouse *psmouse)

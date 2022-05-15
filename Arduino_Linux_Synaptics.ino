@@ -2,6 +2,9 @@
 #include "Arduino_Linux_Synaptics.h"
 #include "dummy_psmouse.h"
 
+#include "Bluetooth.h"
+Bluetooth bluetooth(115200, false, 0, 0);
+
 Synaptics *device = nullptr;
 
 void print_data(bool data_packet=false) {
@@ -25,9 +28,10 @@ void print_data(bool data_packet=false) {
 void setup(void){
   Serial.begin(115200);
   device = new Synaptics(3, 2);
-  Serial.println("Init done!");
+  //Serial.println("Init done!");
   device->set_mode(0x81); // Absolute mode + disgest (= EW mode) + W mode
   device->set_agm();
+  /*
   Serial.print("read_modes: ");
   device->read_modes();
   print_data();
@@ -58,6 +62,7 @@ void setup(void){
   Serial.print("sleep for 5 secs...");
   delay(5000);
   Serial.println("done!");
+  */
   device->enable();
 }
 
@@ -101,9 +106,8 @@ void loop(void){
     }
   }
   old_single_touch = fingers == 1;
-  Serial.print("rel_x: "); Serial.print(rel_x);
-  Serial.print(" rel_y: "); Serial.print(rel_y);
-  Serial.println();
+
+  bluetooth.sendMouseState(0, rel_x, rel_y, 0);
   memset(&dev, 0, sizeof(dev));
   delay(20);
 }
