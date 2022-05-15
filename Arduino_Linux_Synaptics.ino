@@ -116,7 +116,7 @@ void loop(void){
   static int32_t tap_effective_end = -1;
   static uint8_t tap_effective_btn = 0;
   static bool gesture_window = false;
-  bool double_tap = false;
+  uint8_t double_tap = 0;
   uint8_t gest_btn = 0;
   do {
     if (phy_btn) {
@@ -125,7 +125,7 @@ void loop(void){
       tap_effective_end = -1;
       tap_effective_btn = 0;
       gesture_window = false;
-      double_tap = false;
+      double_tap = 0;
 
       break; // do~while(0) as goto
     }
@@ -143,7 +143,7 @@ void loop(void){
     if (!dev.btn_touch) {
       if (tap_detect_end > millis()) { // Tap detected
         if (gesture_window && (tap_effective_btn == tap_btn_candidate))
-          double_tap = true;
+          double_tap = 2;
         tap_effective_btn = tap_btn_candidate;
         tap_effective_end = millis() + TAP_DURATION;
       }
@@ -158,8 +158,10 @@ void loop(void){
 
   if (tap_effective_end != -1) {
     gest_btn = tap_effective_btn;
-    if (double_tap)
+    if (double_tap) {
       gest_btn = 0;
+      double_tap--;
+    }
     if (tap_effective_end < millis()) {
       if (gesture_window && (tap_effective_btn == tap_btn_candidate))
       {} // tap-drag in progress: keep the button press
