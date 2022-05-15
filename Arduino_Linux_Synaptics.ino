@@ -144,6 +144,7 @@ void loop(void){
 
   /* Tap detection delay test */
   // Is eating 200ms of input tolerable?
+  // -> No it's not.
   static int32_t tap_detect_end = -1;
   if (tap_detect_end != -1) {
     if (millis() > tap_detect_end) {
