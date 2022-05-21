@@ -218,25 +218,28 @@ void loop(void){
   if (rel_y < 0) rel_y++;
 
   /* Cursor pose */
-  static bool old_single_touch = false;
+  static bool old_move_cursor = false;
   int cur_dx = 0, cur_dy = 0;
   
-  bool single_touch = (fingers == 1) && dev.btn_touch;
-  if (single_touch) {
-    if (!old_single_touch) {
+  bool move_cursor = 
+      ((fingers == 1) && dev.btn_touch) // single finger touch
+      || (tap_effective_end != -1); // tap or tap-drag in progress
+  if (move_cursor) {
+    if (!old_move_cursor) {
       cur_dx = 0; cur_dy = 0;
     } else {
       cur_dx = rel_x; cur_dy = rel_y;
     }
   }
-  old_single_touch = single_touch;
+  old_move_cursor = move_cursor;
 
   /* Scroll */
   static bool old_double_touch = false;
   int scr_y = 0;
 
   bool double_touch = (fingers == 2);
-  if (double_touch) {
+  if ((tap_effective_end == -1) && // tap or tap-drag not in progress
+      double_touch) {
     if (!old_double_touch) {
       scr_y = 0;
     } else {
