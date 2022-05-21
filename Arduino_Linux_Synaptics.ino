@@ -221,7 +221,7 @@ void loop(void){
   rel_x = dev.abs_x - old_x; old_x = dev.abs_x;
   rel_y = dev.abs_y - old_y; old_y = dev.abs_y;
 
-  rel_x = rel_x >> 3; rel_y = rel_y >> 3;
+  rel_x = (rel_x * 5) >> 4; rel_y = rel_y >> 3; // Tweakable, depending on pad resolution
   if (rel_x < 0) rel_x++;
   if (rel_y < 0) rel_y++;
 
@@ -256,7 +256,7 @@ void loop(void){
   }
   old_double_touch = double_touch;
 
-  scr_y = scr_y >> 3;
+  scr_y = scr_y >> 2; // Tweakable, depending on pad resolution
   if (scr_y < 0) scr_y++;
 
   if (btn_xor || cur_dx || cur_dy || scr_y)
