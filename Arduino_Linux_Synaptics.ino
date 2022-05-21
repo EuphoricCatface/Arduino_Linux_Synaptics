@@ -184,7 +184,7 @@ void loop(void){
   rel_x = dev.abs_x - old_x; old_x = dev.abs_x;
   rel_y = dev.abs_y - old_y; old_y = dev.abs_y;
 
-  rel_x = rel_x >> 2; rel_y = rel_y >> 2;
+  rel_x = rel_x >> 3; rel_y = rel_y >> 3;
   if (rel_x < 0) rel_x++;
   if (rel_y < 0) rel_y++;
 
