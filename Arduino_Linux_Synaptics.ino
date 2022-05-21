@@ -7,7 +7,7 @@ Bluetooth bluetooth(115200, false, 0, 0);
 
 #define TAP_DURATION 200
 
-#define DEBUG true
+#define DEBUG false
 #if DEBUG
 void SERIAL_DEBUG(char * msg) {
   Serial.println();
@@ -149,13 +149,13 @@ void loop(void){
       SERIAL_DEBUG("Touch starts");
       tap_detect_end = millis() + TAP_DURATION;
       tap_btn_candidate = fingers;
-      if (tap_effective_end > millis())
+      if (tap_effective_end > (int32_t)millis())
         gesture_window = true;
       break;
     }
     if (!dev.btn_touch) {
       // Touch ends
-      if (tap_detect_end > millis()) {
+      if (tap_detect_end > (int32_t)millis()) {
         // Touch is short enough: Tap detected
         SERIAL_DEBUG("Tap detected");
         if (gesture_window && (tap_effective_btn == tap_btn_candidate)){
@@ -183,7 +183,7 @@ void loop(void){
       gest_btn = 0;
       double_tap--;
     }
-    if (tap_effective_end < millis()) {
+    if (tap_effective_end < (int32_t)millis()) {
       if (gesture_window && (tap_effective_btn == tap_btn_candidate)) {
         // tap-drag in progress: keep the button press
         if (drag_flag == false) {
