@@ -5,7 +5,9 @@
 #include "Bluetooth.h"
 Bluetooth bluetooth(115200, false, 0, 0);
 
-#define TAP_DURATION 200
+#define TAP_DURATION 200 // from libinput
+#define TAP_DISTANCE_X_THRESHOLD 250 // Tweakable, depending on pad size and resolution
+#define TAP_DISTANCE_Y_THRESHOLD 500
 
 #define DEBUG false
 #if DEBUG
@@ -120,6 +122,8 @@ void loop(void){
   /* - Tap gestures */
   // Is eating TAP_DURATION(ms) of input tolerable?
   // -> No it's not.
+  static int32_t touch_start_x = 0;
+  static int32_t touch_start_y = 0;
   static int32_t tap_detect_end = -1;
   // Every tap will have tap_detect_end, even if the time expires.
   static uint8_t tap_btn_candidate = 0;
@@ -147,6 +151,8 @@ void loop(void){
         break;
       // Touch starts
       SERIAL_DEBUG("Touch starts");
+      touch_start_x = dev.abs_x;
+      touch_start_y = dev.abs_y;
       tap_detect_end = millis() + TAP_DURATION;
       tap_btn_candidate = fingers;
       if (tap_effective_end > (int32_t)millis())
@@ -155,7 +161,9 @@ void loop(void){
     }
     if (!dev.btn_touch) {
       // Touch ends
-      if (tap_detect_end > (int32_t)millis()) {
+      if (tap_detect_end > (int32_t)millis() // Time constraint
+          && abs(touch_start_x - dev.abs_x) < TAP_DISTANCE_X_THRESHOLD // distance constraint
+          && abs(touch_start_y - dev.abs_y) < TAP_DISTANCE_Y_THRESHOLD) {
         // Touch is short enough: Tap detected
         SERIAL_DEBUG("Tap detected");
         if (gesture_window && (tap_effective_btn == tap_btn_candidate)){
