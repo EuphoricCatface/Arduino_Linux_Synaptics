@@ -127,7 +127,7 @@ void loop(void){
   static uint8_t tap_effective_btn = 0;
   static bool gesture_window = false;
   static bool drag_flag = false;
-  uint8_t double_tap = 0;
+  static uint8_t double_tap = 0;
   uint8_t gest_btn = 0;
   do {
     if (phy_btn) {
@@ -160,7 +160,7 @@ void loop(void){
         SERIAL_DEBUG("Tap detected");
         if (gesture_window && (tap_effective_btn == tap_btn_candidate)){
           SERIAL_DEBUG("Double tap");
-          double_tap = 2;
+          double_tap = 5;
         }
         tap_effective_btn = tap_btn_candidate;
         tap_effective_end = millis() + TAP_DURATION;
@@ -180,6 +180,7 @@ void loop(void){
   if (tap_effective_end != -1) {
     gest_btn = tap_effective_btn;
     if (double_tap) {
+      SERIAL_DEBUG("double tap delay packet");
       gest_btn = 0;
       double_tap--;
     }
