@@ -223,7 +223,7 @@ void loop(void){
   
   bool move_cursor = 
       ((fingers == 1) && dev.btn_touch) // single finger touch
-      || (tap_effective_end != -1); // tap or tap-drag in progress
+      || drag_flag; // (tap_effective_end != -1) -> move during double tap makes it not register as a double tap, when tested with PCBNew
   if (move_cursor) {
     if (!old_move_cursor) {
       cur_dx = 0; cur_dy = 0;
