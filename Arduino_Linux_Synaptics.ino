@@ -7,6 +7,16 @@ Bluetooth bluetooth(115200, false, 0, 0);
 
 #define TAP_DURATION 200
 
+#define DEBUG true
+#if DEBUG
+void SERIAL_DEBUG(char * msg) {
+  Serial.println();
+  Serial.println(msg);
+}
+#else
+inline void SERIAL_DEBUG(char *) {}
+#endif
+
 Synaptics *device = nullptr;
 
 void print_data(bool data_packet=false) {
@@ -116,6 +126,7 @@ void loop(void){
   static int32_t tap_effective_end = -1;
   static uint8_t tap_effective_btn = 0;
   static bool gesture_window = false;
+  static bool drag_flag = false;
   uint8_t double_tap = 0;
   uint8_t gest_btn = 0;
   do {
@@ -132,8 +143,10 @@ void loop(void){
 
     if (tap_detect_end == -1) {
       if (!dev.btn_touch)
+        // Before touch starts
         break;
       // Touch starts
+      SERIAL_DEBUG("Touch starts");
       tap_detect_end = millis() + TAP_DURATION;
       tap_btn_candidate = fingers;
       if (tap_effective_end > millis())
@@ -141,17 +154,25 @@ void loop(void){
       break;
     }
     if (!dev.btn_touch) {
-      if (tap_detect_end > millis()) { // Tap detected
-        if (gesture_window && (tap_effective_btn == tap_btn_candidate))
+      // Touch ends
+      if (tap_detect_end > millis()) {
+        // Touch is short enough: Tap detected
+        SERIAL_DEBUG("Tap detected");
+        if (gesture_window && (tap_effective_btn == tap_btn_candidate)){
+          SERIAL_DEBUG("Double tap");
           double_tap = 2;
+        }
         tap_effective_btn = tap_btn_candidate;
         tap_effective_end = millis() + TAP_DURATION;
       }
-      else {}// Too late! Not a tap
+      else { // Too late! Not a tap
+        SERIAL_DEBUG("Not a tap");
+      }
       tap_detect_end = -1;
       tap_btn_candidate = 0;
       gesture_window = false;
     }
+    // currently touching
     if (fingers > tap_btn_candidate)
       tap_btn_candidate = fingers; // assuming only one button at a time registers as "fingers"
   } while(0);
@@ -163,9 +184,16 @@ void loop(void){
       double_tap--;
     }
     if (tap_effective_end < millis()) {
-      if (gesture_window && (tap_effective_btn == tap_btn_candidate))
-      {} // tap-drag in progress: keep the button press
+      if (gesture_window && (tap_effective_btn == tap_btn_candidate)) {
+        // tap-drag in progress: keep the button press
+        if (drag_flag == false) {
+          SERIAL_DEBUG("Drag start");
+          drag_flag = true;
+        }
+      }
       else {
+        SERIAL_DEBUG("No drag");
+        drag_flag = false;
         gesture_window = false;
         tap_effective_end = -1;
       }
