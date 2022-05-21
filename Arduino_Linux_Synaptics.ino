@@ -218,20 +218,20 @@ void loop(void){
   if (rel_y < 0) rel_y++;
 
   /* Cursor pose */
-  static bool old_move_cursor = false;
+  static uint8_t old_fingers = 0;
   int cur_dx = 0, cur_dy = 0;
-  
+
   bool move_cursor = 
       ((fingers == 1) && dev.btn_touch) // single finger touch
       || drag_flag; // (tap_effective_end != -1) -> move during double tap makes it not register as a double tap, when tested with PCBNew
   if (move_cursor) {
-    if (!old_move_cursor) {
+    if (fingers != old_fingers) { // (try to) suppress jump when finger count changes
       cur_dx = 0; cur_dy = 0;
     } else {
       cur_dx = rel_x; cur_dy = rel_y;
     }
   }
-  old_move_cursor = move_cursor;
+  old_fingers = fingers;
 
   /* Scroll */
   static bool old_double_touch = false;
